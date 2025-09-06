@@ -26,7 +26,7 @@ public:
 class EntityPosition {
 public:
 	Position position;
-	int frame;
+	long unsigned int frame;
 };
 
 class Entity {
@@ -45,12 +45,12 @@ struct Color {
 Entity entities[100];
 int entities_len = 0;
 int paths_current_frame = 0;
-float left = 0, right = 1200, top = 1200, bottom = 0, panX = 0, panY = 0;
+float left = 0, right = 2, top = 2, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
 double soma_dt = 0.0;
 
-float entities_size = 60;
+float entities_size = 0.1;
 
 void drawAxis() {
 	glPushMatrix();
@@ -157,9 +157,9 @@ void initializeEntities() {
 
 		for (auto i = numbers_begin; i != numbers_end;) {
 			EntityPosition pos{};
-			pos.position.x = std::stof(i->str());
+			pos.position.x = std::stof(i->str()) / 1000;
 			++i;
-			pos.position.y = std::stof(i->str());
+			pos.position.y = std::stof(i->str()) / 1000;
 			++i;
 			pos.frame = std::stoi(i->str());
 			++i;
@@ -191,7 +191,7 @@ void initializeEntities() {
 
 void start() {
 	glMatrixMode(GL_PROJECTION);
-	glViewport(0, 0, 1000, 1000);
+	glViewport(0, 0, 800, 800);
 	glLoadIdentity();
 	gluOrtho2D(left, right, bottom, top); // TODO
 	glMatrixMode(GL_MODELVIEW);
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
 	initializeEntities();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(1000, 1000);
+	glutInitWindowSize(800, 800);
 	glutCreateWindow("CG - T1 - Germano Corrêa");
 
 	glutDisplayFunc(mainDraw);
