@@ -201,21 +201,9 @@ void initializeEntities() {
 
 	MyReadFile.close();
 
-	// // Calcula o maior número de frames entre as entidades carregadas
-	// global_max_frames = 0;
-	// for (int i = 0; i < entities_len; ++i) {
-	// 	if (entities[i].positions.size() > global_max_frames) {
-	// 		global_max_frames = entities[i].positions.size();
-	// 	}
-	// }
-	//
 	// pixel por metro é a primeira info no arquivo de paths
 	// dps, cada linha é uma entidade e o 1o nro é a qtd de frames em que ela aparece
 	// dps cada valor é uma tupla de x,y,f sendo f o frame
-	// o arquivo representa um frame
-	// TODO: carrega arquivo
-	// inicializa objetos para cada entidade
-	// ordena frames
 }
 
 void start() {
