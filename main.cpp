@@ -50,7 +50,9 @@ using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
 double soma_dt = 0.0;
 
-float entities_size = 0.1;
+float entities_size = 0.06;
+// Mantém o maior número de frames entre as entidades carregadas
+static size_t global_max_frames = 0;
 
 void drawAxis() {
 	glPushMatrix();
@@ -78,8 +80,14 @@ void drawEntity(Entity entity) {
 	// 	x = entity.overridePosition.x;
 	// 	y = entity.overridePosition.y;
 	// } else {
-		x = entity.positions[paths_current_frame].position.x;
-		y = entity.positions[paths_current_frame].position.y;
+		// Evita acesso fora do vetor
+		if (entity.positions.empty()) {
+			glPopMatrix();
+			return;
+		}
+		const size_t idx = std::min<size_t>(static_cast<size_t>(paths_current_frame), entity.positions.size() - 1);
+		x = entity.positions[idx].position.x;
+		y = entity.positions[idx].position.y;
 	// }
 	glTranslatef(x, y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
@@ -129,7 +137,15 @@ void animate() {
 		return;
 	}
 	soma_dt = 0.0;
-	paths_current_frame++;
+
+	// Se não há frames carregados, nada a animar
+	if (global_max_frames == 0) {
+		return;
+	}
+
+	// Faz o contador circular dentro do total máximo carregado
+	paths_current_frame = (paths_current_frame + 1) % static_cast<int>(global_max_frames);
+
 	glutPostRedisplay();
 }
 
@@ -153,7 +169,14 @@ void initializeEntities() {
 		auto numbers_begin = std::sregex_iterator(line.begin(), line.end(), number_regex);
 		auto numbers_end = std::sregex_iterator();
 
-		++numbers_begin;
+		size_t frames_count = 0;
+		if (numbers_begin != numbers_end) {
+			frames_count = std::stoul(numbers_begin->str());
+			if (frames_count > global_max_frames) {
+				global_max_frames = frames_count;
+			}
+			++numbers_begin;
+		}
 
 		for (auto i = numbers_begin; i != numbers_end;) {
 			EntityPosition pos{};
@@ -178,8 +201,14 @@ void initializeEntities() {
 
 	MyReadFile.close();
 
-
-
+	// // Calcula o maior número de frames entre as entidades carregadas
+	// global_max_frames = 0;
+	// for (int i = 0; i < entities_len; ++i) {
+	// 	if (entities[i].positions.size() > global_max_frames) {
+	// 		global_max_frames = entities[i].positions.size();
+	// 	}
+	// }
+	//
 	// pixel por metro é a primeira info no arquivo de paths
 	// dps, cada linha é uma entidade e o 1o nro é a qtd de frames em que ela aparece
 	// dps cada valor é uma tupla de x,y,f sendo f o frame
