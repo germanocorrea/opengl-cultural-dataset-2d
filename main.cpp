@@ -33,7 +33,7 @@ class Entity {
 public:
 	bool isControllable = false;
 	float rotation = 0;
-	Position overridePosition;
+	Position overridePosition{};
 	std::vector<EntityPosition> positions;
 };
 
@@ -45,12 +45,32 @@ struct Color {
 Entity entities[100];
 int entities_len = 0;
 int paths_current_frame = 0;
-float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
+float left = 0, right = 1200, top = 1200, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
 double soma_dt = 0.0;
 
+float entities_size = 60;
+
+void drawAxis() {
+	glPushMatrix();
+	glLoadIdentity();
+
+	glColor3f(1, 1, 1);
+	glLineWidth(1);
+
+	glBegin(GL_LINES);
+	glVertex2f(left, 0);
+	glVertex2f(right, 0);
+	glVertex2f(0, top);
+	glVertex2f(0, bottom);
+	glEnd();
+
+	glPopMatrix();
+}
+
 void drawEntity(Entity entity) {
+	glColor3f(1, 0, 0); // TODO: melhorar
 	glPushMatrix();
 
 	float x, y;
@@ -66,9 +86,9 @@ void drawEntity(Entity entity) {
 
 	glBegin(GL_QUADS); // TODO: trocar por outra coisa
 	glVertex2f(0, 0);
-	glVertex2f(100, 0);
-	glVertex2f(100, 100);
-	glVertex2f(0, 100);
+	glVertex2f(entities_size, 0);
+	glVertex2f(entities_size, entities_size);
+	glVertex2f(0, entities_size);
 	glEnd();
 	glPopMatrix();
 }
@@ -76,7 +96,7 @@ void drawEntity(Entity entity) {
 void mainDraw() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, 0, 0, 0); // TODO
+	gluOrtho2D(left, right, bottom, top); // TODO
 	glMatrixMode(GL_MODELVIEW);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -87,17 +107,25 @@ void mainDraw() {
 		drawEntity(entities[i]);
 	}
 
+	drawAxis();
 	glutSwapBuffers();
 }
 
 void animate() {
+
+	/**
+	 * FIXME
+	/usr/include/c++/15.2.1/bits/stl_vector.h:1263: constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](size_type)
+	[with _Tp = EntityPosition; _Alloc = std::allocator<EntityPosition>; reference = EntityPosition&; size_type = long unsigned int]: Assertion '__n < this->size()' failed.
+	 */
+
 	auto time_now = Clock::now();
 	std::chrono::duration<double> dt = time_now - time_before; // segundos em double
 	time_before = time_now;
 
 	soma_dt += dt.count();
 
-	if (soma_dt <= (1.0 / 60.0)) {
+	if (soma_dt <= (1.0 / 30.0)) {
 		return;
 	}
 	soma_dt = 0.0;
@@ -161,11 +189,20 @@ void initializeEntities() {
 	// ordena frames
 }
 
+void start() {
+	glMatrixMode(GL_PROJECTION);
+	glViewport(0, 0, 1000, 1000);
+	glLoadIdentity();
+	gluOrtho2D(left, right, bottom, top); // TODO
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
 int main(int argc, char **argv) {
 	initializeEntities();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(800, 800);
+	glutInitWindowSize(1000, 1000);
 	glutCreateWindow("CG - T1 - Germano Corrêa");
 
 	glutDisplayFunc(mainDraw);
@@ -173,7 +210,7 @@ int main(int argc, char **argv) {
 	// glutKeyboardFunc(teclado);
 	// glutSpecialFunc(teclasEspeciais);
 
-	// start();
+	start();
 
 	try {
 		glutMainLoop();
