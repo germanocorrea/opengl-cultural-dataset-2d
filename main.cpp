@@ -120,13 +120,6 @@ void mainDraw() {
 }
 
 void animate() {
-
-	/**
-	 * FIXME
-	/usr/include/c++/15.2.1/bits/stl_vector.h:1263: constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](size_type)
-	[with _Tp = EntityPosition; _Alloc = std::allocator<EntityPosition>; reference = EntityPosition&; size_type = long unsigned int]: Assertion '__n < this->size()' failed.
-	 */
-
 	auto time_now = Clock::now();
 	std::chrono::duration<double> dt = time_now - time_before; // segundos em double
 	time_before = time_now;
@@ -138,12 +131,10 @@ void animate() {
 	}
 	soma_dt = 0.0;
 
-	// Se não há frames carregados, nada a animar
 	if (global_max_frames == 0) {
 		return;
 	}
 
-	// Faz o contador circular dentro do total máximo carregado
 	paths_current_frame = (paths_current_frame + 1) % static_cast<int>(global_max_frames);
 
 	glutPostRedisplay();
