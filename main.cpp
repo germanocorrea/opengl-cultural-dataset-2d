@@ -133,7 +133,7 @@ void animate() {
 
 	soma_dt += dt.count();
 
-	if (soma_dt <= (1.0 / 30.0)) {
+	if (soma_dt <= (1.0 / 15.0)) {
 		return;
 	}
 	soma_dt = 0.0;
