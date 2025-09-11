@@ -20,7 +20,7 @@
 
 class Position {
 public:
-	float x, y;
+	int x, y;
 };
 
 class EntityPosition {
@@ -45,12 +45,12 @@ struct Color {
 Entity entities[100];
 int entities_len = 0;
 int paths_current_frame = 0;
-float left = 0, right = 2, top = 2, bottom = 0, panX = 0, panY = 0;
+float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
 double soma_dt = 0.0;
 
-float entities_size = 0.06;
+float entities_size = 20.0;
 // Mantém o maior número de frames entre as entidades carregadas
 static size_t global_max_frames = 0;
 
@@ -75,20 +75,15 @@ void drawEntity(Entity entity) {
 	glColor3f(1, 0, 0); // TODO: melhorar
 	glPushMatrix();
 
-	float x, y;
-	// if (entity.overridePosition != NULL) {
-	// 	x = entity.overridePosition.x;
-	// 	y = entity.overridePosition.y;
-	// } else {
-		// Evita acesso fora do vetor
-		if (entity.positions.empty()) {
-			glPopMatrix();
-			return;
-		}
-		const size_t idx = std::min<size_t>(static_cast<size_t>(paths_current_frame), entity.positions.size() - 1);
-		x = entity.positions[idx].position.x;
-		y = entity.positions[idx].position.y;
-	// }
+	// Evita acesso fora do vetor
+	if (entity.positions.empty()) {
+		glPopMatrix();
+		return;
+	}
+
+	const size_t idx = std::min<size_t>(static_cast<size_t>(paths_current_frame), entity.positions.size() - 1);
+	float x = entity.positions[idx].position.x;
+	float y = entity.positions[idx].position.y;
 	glTranslatef(x, y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
@@ -115,7 +110,7 @@ void mainDraw() {
 		drawEntity(entities[i]);
 	}
 
-	drawAxis();
+	// drawAxis();
 	glutSwapBuffers();
 }
 
@@ -126,7 +121,7 @@ void animate() {
 
 	soma_dt += dt.count();
 
-	if (soma_dt <= (1.0 / 15.0)) {
+	if (soma_dt <= (1.0 / 5.0)) {
 		return;
 	}
 	soma_dt = 0.0;
@@ -144,14 +139,21 @@ void initializeEntities() {
 	std::string line;
 	std::ifstream MyReadFile("../assets/Paths_D.txt"); // FIXME
 	if (!MyReadFile.is_open()) {
-		std::cerr << "Erro: não foi possível abrir 'assets/Paths_D.txt'. CWD: " << std::filesystem::current_path() << std::endl;
+		std::cerr << "Erro: não foi possível abrir 'assets/Paths_D.txt'. CWD: " << std::filesystem::current_path() <<
+				std::endl;
 		return;
 	}
 
 	if (!getline(MyReadFile, line)) {
-		std::cerr << "Aviso: arquivo 'assets/Paths_D.txt' está vazio ou sem a primeira linha esperada. CWD: " << std::filesystem::current_path() << std::endl;
+		std::cerr << "Aviso: arquivo 'assets/Paths_D.txt' está vazio ou sem a primeira linha esperada. CWD: " <<
+				std::filesystem::current_path() << std::endl;
 		return;
 	}
+
+	int biggest_x = 0;
+	int biggest_y = 0;
+	int lowest_x = 0;
+	int lowest_y = 0;
 
 	int linhas_processadas = 0;
 	while (getline(MyReadFile, line)) {
@@ -171,13 +173,27 @@ void initializeEntities() {
 
 		for (auto i = numbers_begin; i != numbers_end;) {
 			EntityPosition pos{};
-			pos.position.x = std::stof(i->str()) / 1000;
+			pos.position.x = std::stoi(i->str());
 			++i;
-			pos.position.y = std::stof(i->str()) / 1000;
+			pos.position.y = std::stoi(i->str());
 			++i;
 			pos.frame = std::stoi(i->str());
 			++i;
 			positions.push_back(pos);
+
+			if (pos.position.x > biggest_x) {
+				biggest_x = pos.position.x;
+			}
+			if (pos.position.y > biggest_y) {
+				biggest_y = pos.position.y;
+			}
+
+			if (pos.position.x < lowest_x) {
+				lowest_x = pos.position.x;
+			}
+			if (pos.position.y < lowest_y) {
+				lowest_y = pos.position.y;
+			}
 		}
 
 		Entity entity;
@@ -187,14 +203,16 @@ void initializeEntities() {
 	}
 
 	if (entities_len == 0) {
-		std::cerr << "Aviso: arquivo lido, porém nenhuma entidade foi carregada (linhas processadas: " << linhas_processadas << ")." << std::endl;
+		std::cerr << "Aviso: arquivo lido, porém nenhuma entidade foi carregada (linhas processadas: " <<
+				linhas_processadas << ")." << std::endl;
 	}
 
 	MyReadFile.close();
 
-	// pixel por metro é a primeira info no arquivo de paths
-	// dps, cada linha é uma entidade e o 1o nro é a qtd de frames em que ela aparece
-	// dps cada valor é uma tupla de x,y,f sendo f o frame
+	right = biggest_x;
+	top = biggest_y;
+	left = lowest_x;
+	bottom = lowest_y;
 }
 
 void start() {
@@ -222,5 +240,6 @@ int main(int argc, char **argv) {
 
 	try {
 		glutMainLoop();
-	} catch (const std::exception &e) {}
+	} catch (const std::exception &e) {
+	}
 }
