@@ -224,6 +224,12 @@ void start() {
 	glLoadIdentity();
 }
 
+void teclado(unsigned char key, int x, int y) {
+	if (key == 27) {
+		exit(0);
+	}
+}
+
 int main(int argc, char **argv) {
 	initializeEntities();
 	glutInit(&argc, argv);
@@ -233,7 +239,7 @@ int main(int argc, char **argv) {
 
 	glutDisplayFunc(mainDraw);
 	glutIdleFunc(animate); // garante a animação contínua
-	// glutKeyboardFunc(teclado);
+	glutKeyboardFunc(teclado);
 	// glutSpecialFunc(teclasEspeciais);
 
 	start();
