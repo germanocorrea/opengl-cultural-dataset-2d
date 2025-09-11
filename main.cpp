@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <regex>
@@ -46,7 +47,7 @@ struct Color {
 std::vector<std::unique_ptr<Entity>> entities;
 Entity *mainEntity;
 int entities_len = 0;
-int paths_current_frame = 0;
+float paths_current_frame = 0;
 float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
@@ -55,25 +56,12 @@ double soma_dt = 0.0;
 float entities_size = 20.0;
 static size_t global_max_frames = 0;
 
-void drawAxis() {
-	glPushMatrix();
-	glLoadIdentity();
-
-	glColor3f(1, 1, 1);
-	glLineWidth(1);
-
-	glBegin(GL_LINES);
-	glVertex2f(left, 0);
-	glVertex2f(right, 0);
-	glVertex2f(0, top);
-	glVertex2f(0, bottom);
-	glEnd();
-
-	glPopMatrix();
+size_t normalizeIdx(const int idx, const int count) {
+	return std::min<size_t>(static_cast<size_t>(idx), count - 1);
 }
 
 void drawEntity(Entity& entity) {
-	glColor3f(1, 0, 0); // TODO: melhorar
+	glColor3f(0.2, 0.8, 0); // TODO: melhorar
 	glPushMatrix();
 
 	if (entity.positions.empty() && !entity.isControllable) {
@@ -82,18 +70,26 @@ void drawEntity(Entity& entity) {
 	}
 
 	float x, y;
-	const size_t idx = std::min<size_t>(static_cast<size_t>(paths_current_frame), entity.positions.size() - 1);
 	if (entity.isControllable) {
 		x = entity.overridePosition.x;
 		y = entity.overridePosition.y;
 	} else {
-		x = entity.positions[idx].position.x;
-		y = entity.positions[idx].position.y;
+		const size_t floored_frame = normalizeIdx(std::floor(paths_current_frame), entity.positions.size());
+		const size_t ceiled_frame = normalizeIdx(std::ceil(paths_current_frame), entity.positions.size());
+		if (paths_current_frame - floored_frame > 0.0) {
+			x = entity.positions[floored_frame].position.x + (entity.positions[ceiled_frame].position.x - entity.positions[floored_frame].position.x) * (paths_current_frame - floored_frame);
+			y = entity.positions[floored_frame].position.y + (entity.positions[ceiled_frame].position.y - entity.positions[floored_frame].position.y) * (paths_current_frame - floored_frame);
+		} else {
+			const size_t idx = normalizeIdx(paths_current_frame, entity.positions.size());
+			x = entity.positions[idx].position.x;
+			y = entity.positions[idx].position.y;
+		}
+
 	}
 	glTranslatef(x, y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
-	glBegin(GL_QUADS); // TODO: trocar por outra coisa
+	glBegin(GL_QUADS);
 	glVertex2f(0, 0);
 	glVertex2f(entities_size, 0);
 	glVertex2f(entities_size, entities_size);
@@ -105,7 +101,7 @@ void drawEntity(Entity& entity) {
 void mainDraw() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(left, right, bottom, top); // TODO
+	gluOrtho2D(left, right, bottom, top);
 	glMatrixMode(GL_MODELVIEW);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -127,7 +123,7 @@ void animate() {
 
 	soma_dt += dt.count();
 
-	if (soma_dt <= (1.0 / 5.0)) {
+	if (soma_dt <= (1.0 / 60.0)) {
 		return;
 	}
 	soma_dt = 0.0;
@@ -136,7 +132,7 @@ void animate() {
 		return;
 	}
 
-	paths_current_frame = (paths_current_frame + 1) % static_cast<int>(global_max_frames);
+	paths_current_frame += 0.1;
 
 	glutPostRedisplay();
 }
