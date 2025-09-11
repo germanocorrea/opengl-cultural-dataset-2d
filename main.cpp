@@ -3,6 +3,7 @@
 #include <fstream>
 #include <regex>
 #include <vector>
+#include <memory>
 #include <iostream>
 #include <filesystem>
 #include <GL/gl.h>     // Funções da OpenGL
@@ -42,7 +43,8 @@ struct Color {
 	float r, g, b;
 };
 
-Entity entities[100];
+std::vector<std::unique_ptr<Entity>> entities;
+Entity *mainEntity;
 int entities_len = 0;
 int paths_current_frame = 0;
 float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
@@ -51,7 +53,6 @@ auto time_before = Clock::now();
 double soma_dt = 0.0;
 
 float entities_size = 20.0;
-// Mantém o maior número de frames entre as entidades carregadas
 static size_t global_max_frames = 0;
 
 void drawAxis() {
@@ -71,19 +72,24 @@ void drawAxis() {
 	glPopMatrix();
 }
 
-void drawEntity(Entity entity) {
+void drawEntity(Entity& entity) {
 	glColor3f(1, 0, 0); // TODO: melhorar
 	glPushMatrix();
 
-	// Evita acesso fora do vetor
-	if (entity.positions.empty()) {
+	if (entity.positions.empty() && !entity.isControllable) {
 		glPopMatrix();
 		return;
 	}
 
+	float x, y;
 	const size_t idx = std::min<size_t>(static_cast<size_t>(paths_current_frame), entity.positions.size() - 1);
-	float x = entity.positions[idx].position.x;
-	float y = entity.positions[idx].position.y;
+	if (entity.isControllable) {
+		x = entity.overridePosition.x;
+		y = entity.overridePosition.y;
+	} else {
+		x = entity.positions[idx].position.x;
+		y = entity.positions[idx].position.y;
+	}
 	glTranslatef(x, y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
@@ -106,8 +112,8 @@ void mainDraw() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	for (int i = 0; i < entities_len; i++) {
-		drawEntity(entities[i]);
+	for (size_t i = 0; i < entities.size(); i++) {
+		drawEntity(*entities[i]);
 	}
 
 	// drawAxis();
@@ -155,7 +161,6 @@ void initializeEntities() {
 	int lowest_x = 0;
 	int lowest_y = 0;
 
-	int linhas_processadas = 0;
 	while (getline(MyReadFile, line)) {
 		std::vector<EntityPosition> positions;
 		std::regex number_regex("\\d+\\.?\\d*");
@@ -196,17 +201,27 @@ void initializeEntities() {
 			}
 		}
 
-		Entity entity;
-		entity.positions = positions;
-		entities[entities_len++] = entity;
-		linhas_processadas++;
+		entities.push_back(
+			std::make_unique<Entity>(Entity{
+				.positions = positions
+			})
+		);
 	}
+	auto mainEntityPtr = std::make_unique<Entity>(Entity{
+		.isControllable = true,
+		.rotation = 0,
+		.overridePosition = {
+			.x = (biggest_x - lowest_x) / 2,
+			.y = (biggest_y - lowest_y) / 2,
+		},
+	});
+	mainEntity = mainEntityPtr.get();
+	entities.push_back(std::move(mainEntityPtr));
 
-	if (entities_len == 0) {
-		std::cerr << "Aviso: arquivo lido, porém nenhuma entidade foi carregada (linhas processadas: " <<
-				linhas_processadas << ")." << std::endl;
+
+	if (entities.empty()) {
+		std::cerr << "Aviso: arquivo lido, porém nenhuma entidade foi carregada." << std::endl;
 	}
-
 	MyReadFile.close();
 
 	right = biggest_x;
@@ -230,6 +245,25 @@ void teclado(unsigned char key, int x, int y) {
 	}
 }
 
+void teclasEspeciais(int key, int x, int y) {
+	int movement = 10;
+	switch (key) {
+		case GLUT_KEY_LEFT:
+			mainEntity->overridePosition.x -= movement;
+			break;
+		case GLUT_KEY_RIGHT:
+			mainEntity->overridePosition.x += movement;
+			break;
+		case GLUT_KEY_UP:
+			mainEntity->overridePosition.y += movement;
+			break;
+		case GLUT_KEY_DOWN:
+			mainEntity->overridePosition.y -= movement;
+			break;
+	}
+	glutPostRedisplay();
+}
+
 int main(int argc, char **argv) {
 	initializeEntities();
 	glutInit(&argc, argv);
@@ -240,7 +274,7 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(mainDraw);
 	glutIdleFunc(animate); // garante a animação contínua
 	glutKeyboardFunc(teclado);
-	// glutSpecialFunc(teclasEspeciais);
+	glutSpecialFunc(teclasEspeciais);
 
 	start();
 
