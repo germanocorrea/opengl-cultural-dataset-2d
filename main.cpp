@@ -136,9 +136,9 @@ void animate() {
 	glutPostRedisplay();
 }
 
-void initializeEntities() {
+void initializeEntities(const std::string& filename) {
 	std::string line;
-	std::ifstream MyReadFile("../assets/Paths_D.txt"); // FIXME
+	std::ifstream MyReadFile(filename);
 	if (!MyReadFile.is_open()) {
 		std::cerr << "Erro: não foi possível abrir 'assets/Paths_D.txt'. CWD: " << std::filesystem::current_path() <<
 				std::endl;
@@ -260,12 +260,13 @@ void teclasEspeciais(int key, int x, int y) {
 }
 
 int main(int argc, char **argv) {
-	initializeEntities();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(800, 800);
 	glutCreateWindow("CG - T1 - Germano Corrêa");
 
+	std::string filename = argv[1];
+	initializeEntities(filename);
 	glutDisplayFunc(mainDraw);
 	glutIdleFunc(animate); // garante a animação contínua
 	glutKeyboardFunc(teclado);
