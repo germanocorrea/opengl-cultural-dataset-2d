@@ -7,18 +7,19 @@
 #include <memory>
 #include <iostream>
 #include <filesystem>
-#include <GL/gl.h>     // Funções da OpenGL
-#include <GL/glu.h>    // Funções da GLU
-#include <GL/glut.h>  // GLUT, includes glu.h and gl.h
-// interpolação linear
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 
-/**
- * TODO
- * - ler arquivo(s) de posições
- * - posicionar objetos de acordo com o arquivo e animar em função do tempo
- * - colisões
- * - controle de uma entidade com o teclado
- */
+// TODO: implementar colisoes
+// TODO: aumentar velocidade da entidade controlada por mouse
+// TODO: permitir duas direcoes ao mesmo tempo
+// TODO: entender ou mudar interpolacao linear usada
+// TODO: refazer codigo, SOLID
+
+struct Color {
+	float r, g, b;
+};
 
 class Position {
 public:
@@ -37,12 +38,10 @@ public:
 	float rotation = 0;
 	Position overridePosition{};
 	std::vector<EntityPosition> positions;
+	Color color = {0.2, 0.8, 0};
 };
 
 
-struct Color {
-	float r, g, b;
-};
 
 std::vector<std::unique_ptr<Entity>> entities;
 Entity *mainEntity;
@@ -61,7 +60,7 @@ size_t normalizeIdx(const int idx, const int count) {
 }
 
 void drawEntity(Entity& entity) {
-	glColor3f(0.2, 0.8, 0); // TODO: melhorar
+	glColor3f(entity.color.r, entity.color.g, entity.color.b);
 	glPushMatrix();
 
 	if (entity.positions.empty() && !entity.isControllable) {
