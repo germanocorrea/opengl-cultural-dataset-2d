@@ -140,13 +140,13 @@ void initializeEntities(const std::string& filename) {
 	std::string line;
 	std::ifstream MyReadFile(filename);
 	if (!MyReadFile.is_open()) {
-		std::cerr << "Erro: não foi possível abrir 'assets/Paths_D.txt'. CWD: " << std::filesystem::current_path() <<
+		std::cerr << "Erro: não foi possível abrir '" << filename << "'. CWD: " << std::filesystem::current_path() <<
 				std::endl;
 		return;
 	}
 
 	if (!getline(MyReadFile, line)) {
-		std::cerr << "Aviso: arquivo 'assets/Paths_D.txt' está vazio ou sem a primeira linha esperada. CWD: " <<
+		std::cerr << "Aviso: arquivo '" << filename << "' está vazio ou sem a primeira linha esperada. CWD: " <<
 				std::filesystem::current_path() << std::endl;
 		return;
 	}
