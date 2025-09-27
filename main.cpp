@@ -229,7 +229,7 @@ void start() {
 	glMatrixMode(GL_PROJECTION);
 	glViewport(0, 0, 800, 800);
 	glLoadIdentity();
-	gluOrtho2D(left, right, bottom, top); // TODO
+	gluOrtho2D(left, right, bottom, top);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
