@@ -59,6 +59,39 @@ size_t normalizeIdx(const int idx, const int count) {
 	return std::min<size_t>(static_cast<size_t>(idx), count - 1);
 }
 
+int interpolate(const int a, const int b, const float t) {
+	return a + (b - a) * t;
+}
+
+Position interpolatePosition(const EntityPosition& a, const EntityPosition& b, const float t) {
+	return {
+		.x = interpolate(a.position.x, b.position.x, t),
+		.y = interpolate(a.position.y, b.position.y, t),
+	};
+}
+
+Position getEntityPosition(Entity& entity) {
+	if (entity.isControllable) {
+		return {
+			.x = entity.overridePosition.x,
+			.y = entity.overridePosition.y,
+		};
+	}
+
+	const size_t floored_frame = normalizeIdx(std::floor(paths_current_frame), entity.positions.size());
+	const size_t ceiled_frame = normalizeIdx(std::ceil(paths_current_frame), entity.positions.size());
+	if (paths_current_frame - floored_frame > 0.0) {
+		return interpolatePosition(
+			entity.positions[floored_frame],
+			entity.positions[ceiled_frame],
+			paths_current_frame - floored_frame
+		);
+	}
+
+	const size_t idx = normalizeIdx(paths_current_frame, entity.positions.size());
+	return entity.positions[idx].position;
+}
+
 void drawEntity(Entity& entity) {
 	glColor3f(entity.color.r, entity.color.g, entity.color.b);
 	glPushMatrix();
@@ -68,24 +101,8 @@ void drawEntity(Entity& entity) {
 		return;
 	}
 
-	float x, y;
-	if (entity.isControllable) {
-		x = entity.overridePosition.x;
-		y = entity.overridePosition.y;
-	} else {
-		const size_t floored_frame = normalizeIdx(std::floor(paths_current_frame), entity.positions.size());
-		const size_t ceiled_frame = normalizeIdx(std::ceil(paths_current_frame), entity.positions.size());
-		if (paths_current_frame - floored_frame > 0.0) {
-			x = entity.positions[floored_frame].position.x + (entity.positions[ceiled_frame].position.x - entity.positions[floored_frame].position.x) * (paths_current_frame - floored_frame);
-			y = entity.positions[floored_frame].position.y + (entity.positions[ceiled_frame].position.y - entity.positions[floored_frame].position.y) * (paths_current_frame - floored_frame);
-		} else {
-			const size_t idx = normalizeIdx(paths_current_frame, entity.positions.size());
-			x = entity.positions[idx].position.x;
-			y = entity.positions[idx].position.y;
-		}
-
-	}
-	glTranslatef(x, y, 0);
+	Position posToTranslatef = getEntityPosition(entity);
+	glTranslatef(posToTranslatef.x, posToTranslatef.y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
 	glBegin(GL_QUADS);
