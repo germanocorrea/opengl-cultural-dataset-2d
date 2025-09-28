@@ -11,10 +11,10 @@ class EntityPosition {
 public:
 	Position position;
 	long unsigned int frame;
-	Position interpolateWith(const EntityPosition& other, const float t);
+	Position interpolateWith(const EntityPosition& other, const float t) const;
 
 private:
-	int interpolate(const int a, const int b, const float t);
+	static int interpolate(const int a, const int b, const float t);
 };
 
 
