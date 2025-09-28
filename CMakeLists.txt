@@ -18,7 +18,9 @@ add_executable(CG_TD1 main.cpp ${INCLUDE_FILES}
         src/Entity.h
         src/EntityPosition.cpp
         src/EntityPosition.h
-        src/Types.h)
+        src/Types.h
+        src/CollisionChecker.cpp
+        src/CollisionChecker.h)
 
 
 target_link_libraries(CG_TD1 ${LIBRARIES} m)

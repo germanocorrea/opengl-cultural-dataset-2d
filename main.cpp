@@ -10,7 +10,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
-
+#include "src/CollisionChecker.h"
 #include "src/Entity.h"
 
 // TODO: implementar colisoes
@@ -18,7 +18,7 @@
 // TODO: refazer codigo, SOLID
 // TODO: permitir duas direcoes ao mesmo tempo
 
-std::vector<std::unique_ptr<Entity>> entities;
+std::vector<Entity *> entities;
 Entity *mainEntity;
 float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
@@ -37,8 +37,8 @@ void drawEntity(Entity& entity) {
 		return;
 	}
 
-	Position posToTranslatef = entity.getEntityPosition();
-	glTranslatef(posToTranslatef.x, posToTranslatef.y, 0);
+	EntityPosition* posToTranslatef = entity.calculateEntityPosition();
+	glTranslatef(posToTranslatef->position.x, posToTranslatef->position.y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
 	glBegin(GL_QUADS);
@@ -64,7 +64,6 @@ void mainDraw() {
 		drawEntity(*entities[i]);
 	}
 
-	// drawAxis();
 	glutSwapBuffers();
 }
 
@@ -83,11 +82,19 @@ void animate() {
 	if (global_max_frames == 0) {
 		return;
 	}
+	std::vector<EntityPosition*> positions;
 	for (size_t i = 0; i < entities.size(); i++) {
 		entities[i]->updateCurrentFrame();
+		positions.push_back(entities[i]->calculateEntityPosition());
+	}
+	auto collision = new CollisionChecker(positions, entities, entities_size);
+	std::vector<Entity*> colliding_entities = collision->getCollidingEntities();
+	for (auto entity : colliding_entities) {
+		entity->color = {1.0, 0.0, 0.0};
 	}
 
 	glutPostRedisplay();
+	delete collision;
 }
 
 void initializeEntities(const std::string& filename) {
@@ -112,7 +119,7 @@ void initializeEntities(const std::string& filename) {
 
 	int entity_id = 0;
 	while (getline(MyReadFile, line)) {
-		std::vector<EntityPosition> positions;
+		std::vector<EntityPosition*> positions;
 		std::regex number_regex("\\d+\\.?\\d*");
 		auto numbers_begin = std::sregex_iterator(line.begin(), line.end(), number_regex);
 		auto numbers_end = std::sregex_iterator();
@@ -135,7 +142,7 @@ void initializeEntities(const std::string& filename) {
 			frame = std::stoi(i->str());
 			++i;
 
-			EntityPosition pos(entity_id, {.x = position_x, .y = position_y}, frame);
+			auto pos = new EntityPosition (entity_id, {.x = position_x, .y = position_y});
 			positions.push_back(pos);
 
 			if (position_x > biggest_x) {
@@ -153,17 +160,14 @@ void initializeEntities(const std::string& filename) {
 			}
 		}
 
-		Entity entity(entity_id++, positions, static_cast<int>(frames_count));
-		entities.push_back(std::make_unique<Entity>(entity));
+		auto entity = new Entity(entity_id++, positions, static_cast<int>(frames_count));
+		entities.push_back(entity);
 	}
-	std::unique_ptr<Entity> mainEntityPtr(
-		new Entity(entity_id, true, {
-			.x = (biggest_x - lowest_x) / 2,
-			.y = (biggest_y - lowest_y) / 2,
-		})
-	);
-	mainEntity = mainEntityPtr.get();
-	entities.push_back(std::move(mainEntityPtr));
+	mainEntity = new Entity(entity_id, true, {
+		.x = (biggest_x - lowest_x) / 2,
+		.y = (biggest_y - lowest_y) / 2,
+	});
+	entities.push_back(mainEntity);
 
 
 	if (entities.empty()) {
@@ -220,7 +224,7 @@ int main(int argc, char **argv) {
 	std::string filename = argv[1];
 	initializeEntities(filename);
 	glutDisplayFunc(mainDraw);
-	glutIdleFunc(animate); // garante a animação contínua
+	glutIdleFunc(animate);
 	glutKeyboardFunc(teclado);
 	glutSpecialFunc(teclasEspeciais);
 
@@ -230,4 +234,8 @@ int main(int argc, char **argv) {
 		glutMainLoop();
 	} catch (const std::exception &e) {
 	}
+	for (auto entity : entities) {
+		delete entity;
+	}
+	return 0;
 }
