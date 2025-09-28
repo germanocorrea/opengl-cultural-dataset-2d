@@ -11,84 +11,12 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+#include "src/Entity.h"
+
 // TODO: implementar colisoes
 // TODO: interpolacao no main entity, ao mover add frames "para frente"
 // TODO: refazer codigo, SOLID
 // TODO: permitir duas direcoes ao mesmo tempo
-
-struct Color {
-	float r, g, b;
-};
-
-class Position {
-public:
-	int x, y;
-};
-
-class EntityPosition {
-public:
-	Position position;
-	long unsigned int frame;
-	Position interpolateWith(const EntityPosition& other, const float t) {
-		return {
-			.x = interpolate(position.x, other.position.x, t),
-			.y = interpolate(position.y, other.position.y, t),
-		};
-	}
-private:
-	int interpolate(const int a, const int b, const float t) {
-		return a + (b - a) * t;
-	}
-};
-
-class Entity {
-public:
-	bool isControllable = false;
-	float rotation = 0;
-	Position overridePosition{};
-	std::vector<EntityPosition> positions;
-	Color color = {0.2, 0.8, 0};
-	int max_frames = 0;
-	float current_entity_frame = 0;
-	bool going_backwards = false;
-
-	void updateCurrentFrame() {
-		if ((going_backwards && (current_entity_frame > 0)) || current_entity_frame >= max_frames) {
-			going_backwards = true;
-			current_entity_frame -= 0.1;
-		} else {
-			going_backwards = false;
-			current_entity_frame += 0.1;
-		}
-	}
-
-
-	Position getEntityPosition() {
-		if (isControllable) {
-			return {
-				.x = overridePosition.x,
-				.y = overridePosition.y,
-			};
-		}
-
-		const size_t floored_frame = normalizeIdx(std::floor(current_entity_frame), positions.size());
-		const size_t ceiled_frame = normalizeIdx(std::ceil(current_entity_frame), positions.size());
-		if (current_entity_frame - floored_frame > 0.0) {
-			return positions[floored_frame].interpolateWith(
-				positions[ceiled_frame],
-				current_entity_frame - floored_frame
-			);
-		}
-
-		const size_t idx = normalizeIdx(current_entity_frame, positions.size());
-		return positions[idx].position;
-	}
-private:
-	size_t normalizeIdx(const int idx, const int count) {
-		return std::min<size_t>(static_cast<size_t>(idx), count - 1);
-	}
-};
-
 
 std::vector<std::unique_ptr<Entity>> entities;
 Entity *mainEntity;

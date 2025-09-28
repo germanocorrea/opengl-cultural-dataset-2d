@@ -13,7 +13,12 @@ set(LIBRARIES ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 include_directories(${INCLUDE_DIRS})
 
 file(GLOB INCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/lib/SOIL*.h)
-add_executable(CG_TD1 main.cpp ${INCLUDE_FILES})
+add_executable(CG_TD1 main.cpp ${INCLUDE_FILES}
+        src/Entity.cpp
+        src/Entity.h
+        src/EntityPosition.cpp
+        src/EntityPosition.h
+        src/Types.h)
 
 
 target_link_libraries(CG_TD1 ${LIBRARIES} m)
