@@ -12,10 +12,9 @@
 #include <GL/glut.h>
 
 // TODO: implementar colisoes
-// TODO: aumentar velocidade da entidade controlada por mouse
-// TODO: permitir duas direcoes ao mesmo tempo
-// TODO: entender ou mudar interpolacao linear usada
+// TODO: interpolacao no main entity, ao mover add frames "para frente"
 // TODO: refazer codigo, SOLID
+// TODO: permitir duas direcoes ao mesmo tempo
 
 struct Color {
 	float r, g, b;
