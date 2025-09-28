@@ -127,29 +127,29 @@ void initializeEntities(const std::string& filename) {
 		}
 
 		for (auto i = numbers_begin; i != numbers_end;) {
-			EntityPosition pos{
-				.entity_id = entity_id, // propositalmente nao incrementa
-			};
-			pos.position.x = std::stoi(i->str());
+			int position_x, position_y, frame;
+			position_x = std::stoi(i->str());
 			++i;
-			pos.position.y = std::stoi(i->str());
+			position_y = std::stoi(i->str());
 			++i;
-			pos.frame = std::stoi(i->str());
+			frame = std::stoi(i->str());
 			++i;
+
+			EntityPosition pos(entity_id, {.x = position_x, .y = position_y}, frame);
 			positions.push_back(pos);
 
-			if (pos.position.x > biggest_x) {
-				biggest_x = pos.position.x;
+			if (position_x > biggest_x) {
+				biggest_x = position_x;
 			}
-			if (pos.position.y > biggest_y) {
-				biggest_y = pos.position.y;
+			if (position_y > biggest_y) {
+				biggest_y = position_y;
 			}
 
-			if (pos.position.x < lowest_x) {
-				lowest_x = pos.position.x;
+			if (position_x < lowest_x) {
+				lowest_x = position_x;
 			}
-			if (pos.position.y < lowest_y) {
-				lowest_y = pos.position.y;
+			if (position_y < lowest_y) {
+				lowest_y = position_y;
 			}
 		}
 
