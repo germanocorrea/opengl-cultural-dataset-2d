@@ -29,6 +29,16 @@ class EntityPosition {
 public:
 	Position position;
 	long unsigned int frame;
+	Position interpolateWith(const EntityPosition& other, const float t) {
+		return {
+			.x = interpolate(position.x, other.position.x, t),
+			.y = interpolate(position.y, other.position.y, t),
+		};
+	}
+private:
+	int interpolate(const int a, const int b, const float t) {
+		return a + (b - a) * t;
+	}
 };
 
 class Entity {
@@ -38,14 +48,50 @@ public:
 	Position overridePosition{};
 	std::vector<EntityPosition> positions;
 	Color color = {0.2, 0.8, 0};
-};
+	int max_frames = 0;
+	float current_entity_frame = 0;
+	bool going_backwards = false;
 
+	void updateCurrentFrame() {
+		if ((going_backwards && (current_entity_frame > 0)) || current_entity_frame >= max_frames) {
+			going_backwards = true;
+			current_entity_frame -= 0.1;
+		} else {
+			going_backwards = false;
+			current_entity_frame += 0.1;
+		}
+	}
+
+
+	Position getEntityPosition() {
+		if (isControllable) {
+			return {
+				.x = overridePosition.x,
+				.y = overridePosition.y,
+			};
+		}
+
+		const size_t floored_frame = normalizeIdx(std::floor(current_entity_frame), positions.size());
+		const size_t ceiled_frame = normalizeIdx(std::ceil(current_entity_frame), positions.size());
+		if (current_entity_frame - floored_frame > 0.0) {
+			return positions[floored_frame].interpolateWith(
+				positions[ceiled_frame],
+				current_entity_frame - floored_frame
+			);
+		}
+
+		const size_t idx = normalizeIdx(current_entity_frame, positions.size());
+		return positions[idx].position;
+	}
+private:
+	size_t normalizeIdx(const int idx, const int count) {
+		return std::min<size_t>(static_cast<size_t>(idx), count - 1);
+	}
+};
 
 
 std::vector<std::unique_ptr<Entity>> entities;
 Entity *mainEntity;
-int entities_len = 0;
-float paths_current_frame = 0;
 float left = 0, right = 0, top = 0, bottom = 0, panX = 0, panY = 0;
 using Clock = std::chrono::steady_clock;
 auto time_before = Clock::now();
@@ -53,43 +99,6 @@ double soma_dt = 0.0;
 
 float entities_size = 20.0;
 static size_t global_max_frames = 0;
-
-size_t normalizeIdx(const int idx, const int count) {
-	return std::min<size_t>(static_cast<size_t>(idx), count - 1);
-}
-
-int interpolate(const int a, const int b, const float t) {
-	return a + (b - a) * t;
-}
-
-Position interpolatePosition(const EntityPosition& a, const EntityPosition& b, const float t) {
-	return {
-		.x = interpolate(a.position.x, b.position.x, t),
-		.y = interpolate(a.position.y, b.position.y, t),
-	};
-}
-
-Position getEntityPosition(Entity& entity) {
-	if (entity.isControllable) {
-		return {
-			.x = entity.overridePosition.x,
-			.y = entity.overridePosition.y,
-		};
-	}
-
-	const size_t floored_frame = normalizeIdx(std::floor(paths_current_frame), entity.positions.size());
-	const size_t ceiled_frame = normalizeIdx(std::ceil(paths_current_frame), entity.positions.size());
-	if (paths_current_frame - floored_frame > 0.0) {
-		return interpolatePosition(
-			entity.positions[floored_frame],
-			entity.positions[ceiled_frame],
-			paths_current_frame - floored_frame
-		);
-	}
-
-	const size_t idx = normalizeIdx(paths_current_frame, entity.positions.size());
-	return entity.positions[idx].position;
-}
 
 void drawEntity(Entity& entity) {
 	glColor3f(entity.color.r, entity.color.g, entity.color.b);
@@ -100,7 +109,7 @@ void drawEntity(Entity& entity) {
 		return;
 	}
 
-	Position posToTranslatef = getEntityPosition(entity);
+	Position posToTranslatef = entity.getEntityPosition();
 	glTranslatef(posToTranslatef.x, posToTranslatef.y, 0);
 	glRotatef(entity.rotation, 0, 0, 1);
 
@@ -146,8 +155,9 @@ void animate() {
 	if (global_max_frames == 0) {
 		return;
 	}
-
-	paths_current_frame += 0.1;
+	for (size_t i = 0; i < entities.size(); i++) {
+		entities[i]->updateCurrentFrame();
+	}
 
 	glutPostRedisplay();
 }
@@ -214,7 +224,8 @@ void initializeEntities(const std::string& filename) {
 
 		entities.push_back(
 			std::make_unique<Entity>(Entity{
-				.positions = positions
+				.positions = positions,
+				.max_frames = static_cast<int>(frames_count),
 			})
 		);
 	}
