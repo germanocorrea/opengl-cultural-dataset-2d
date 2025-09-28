@@ -34,7 +34,7 @@ EntityPosition* Entity::calculateEntityPosition() {
 		return this->current_position;
 	}
 	if (isControllable) {
-		return new EntityPosition(-1,{
+		return new EntityPosition(this->id,{
 			.x = overridePosition.x,
 			.y = overridePosition.y,
 		});
