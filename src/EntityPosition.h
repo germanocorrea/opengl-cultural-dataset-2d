@@ -9,6 +9,7 @@
 
 class EntityPosition {
 public:
+	int entity_id;
 	Position position;
 	long unsigned int frame;
 	Position interpolateWith(const EntityPosition& other, const float t) const;

@@ -13,6 +13,7 @@
 
 class Entity {
 public:
+	int id;
 	bool isControllable = false;
 	float rotation = 0;
 	Position overridePosition{};
@@ -22,9 +23,9 @@ public:
 	float current_entity_frame = 0;
 	bool going_backwards = false;
 
+	Entity(int id, std::vector<EntityPosition> positions, int max_frames);
+	Entity(int id, bool isControllable, Position overridePosition);
 	void updateCurrentFrame();
-
-
 	Position getEntityPosition();
 
 private:

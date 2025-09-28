@@ -6,6 +6,18 @@
 
 #include <cmath>
 
+Entity::Entity(const int id, std::vector<EntityPosition> positions, const int max_frames) {
+	this->id = id;
+	this->positions = std::move(positions);
+	this->max_frames = max_frames;
+}
+
+Entity::Entity(const int id, const bool isControllable, const Position overridePosition) {
+	this->id = id;
+	this->isControllable = isControllable;
+	this->overridePosition = overridePosition;
+}
+
 void Entity::updateCurrentFrame() {
 	if ((going_backwards && (current_entity_frame > 0)) || current_entity_frame >= max_frames) {
 		going_backwards = true;

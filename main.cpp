@@ -110,6 +110,7 @@ void initializeEntities(const std::string& filename) {
 	int lowest_x = 0;
 	int lowest_y = 0;
 
+	int entity_id = 0;
 	while (getline(MyReadFile, line)) {
 		std::vector<EntityPosition> positions;
 		std::regex number_regex("\\d+\\.?\\d*");
@@ -126,7 +127,9 @@ void initializeEntities(const std::string& filename) {
 		}
 
 		for (auto i = numbers_begin; i != numbers_end;) {
-			EntityPosition pos{};
+			EntityPosition pos{
+				.entity_id = entity_id, // propositalmente nao incrementa
+			};
 			pos.position.x = std::stoi(i->str());
 			++i;
 			pos.position.y = std::stoi(i->str());
@@ -150,21 +153,15 @@ void initializeEntities(const std::string& filename) {
 			}
 		}
 
-		entities.push_back(
-			std::make_unique<Entity>(Entity{
-				.positions = positions,
-				.max_frames = static_cast<int>(frames_count),
-			})
-		);
+		Entity entity(entity_id++, positions, static_cast<int>(frames_count));
+		entities.push_back(std::make_unique<Entity>(entity));
 	}
-	auto mainEntityPtr = std::make_unique<Entity>(Entity{
-		.isControllable = true,
-		.rotation = 0,
-		.overridePosition = {
+	std::unique_ptr<Entity> mainEntityPtr(
+		new Entity(entity_id, true, {
 			.x = (biggest_x - lowest_x) / 2,
 			.y = (biggest_y - lowest_y) / 2,
-		},
-	});
+		})
+	);
 	mainEntity = mainEntityPtr.get();
 	entities.push_back(std::move(mainEntityPtr));
 
