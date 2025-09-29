@@ -1,13 +1,6 @@
 #include "CollisionChecker.h"
 #include "Entity.h"
 
-struct Area {
-	Position top_left;
-	Position top_right;
-	Position bottom_left;
-	Position bottom_right;
-};
-
 Entity* getEntityFromList(std::vector<Entity*> entities, int id) {
 	for (auto entity : entities) {
 		if (entity->id == id) {
@@ -29,12 +22,11 @@ bool checkIfAlreadyExists(const std::vector<EntityPairs>& pairs, Entity *first, 
 	return false;
 }
 
-std::vector<Entity *> CollisionChecker::getCollidingEntities() {
-	std::vector<Entity *> colliding_entities;
-	for (auto pair : pairs) {
+std::vector<EntityPairs *> CollisionChecker::getCollidingEntities() {
+	std::vector<EntityPairs *> colliding_entities;
+	for (auto& pair : pairs) {
 		if (pair.collision_detected) {
-			colliding_entities.push_back(pair.first);
-			colliding_entities.push_back(pair.second);
+			colliding_entities.push_back(&pair);
 		}
 	}
 	return colliding_entities;

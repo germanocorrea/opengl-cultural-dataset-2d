@@ -13,7 +13,7 @@ struct EntityPairs {
 class CollisionChecker {
 public:
 	CollisionChecker(std::vector<EntityPosition *> current_positions, std::vector<Entity *> entities, int entity_side_size);
-	std::vector<Entity *> getCollidingEntities();
+	std::vector<EntityPairs *> getCollidingEntities();
 private:
 	std::vector<Entity *> entities;
 	std::vector<EntityPairs> pairs;

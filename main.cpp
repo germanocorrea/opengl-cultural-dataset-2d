@@ -13,10 +13,6 @@
 #include "src/CollisionChecker.h"
 #include "src/Entity.h"
 
-// TODO: implementar colisoes
-// TODO: interpolacao no main entity, ao mover add frames "para frente"
-// TODO: refazer codigo, SOLID
-// TODO: permitir duas direcoes ao mesmo tempo
 
 std::vector<Entity *> entities;
 Entity *mainEntity;
@@ -88,9 +84,15 @@ void animate() {
 		positions.push_back(entities[i]->calculateEntityPosition());
 	}
 	auto collision = new CollisionChecker(positions, entities, entities_size);
-	std::vector<Entity*> colliding_entities = collision->getCollidingEntities();
-	for (auto entity : colliding_entities) {
-		entity->color = {1.0, 0.0, 0.0};
+	std::vector<EntityPairs *> colliding_entities = collision->getCollidingEntities();
+	for (const auto pairs : colliding_entities) {
+		Color newColor = {
+			.r = static_cast<float>(rand() % 255 / 255.0),
+			.g = static_cast<float>(rand() % 255 / 255.0),
+			.b = static_cast<float>(rand() % 255 / 255.0),
+		};
+		pairs->first->color = newColor;
+		pairs->second->color = newColor;
 	}
 
 	glutPostRedisplay();

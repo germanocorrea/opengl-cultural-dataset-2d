@@ -34,23 +34,24 @@ EntityPosition* Entity::calculateEntityPosition() {
 		return this->current_position;
 	}
 	if (isControllable) {
-		return new EntityPosition(this->id,{
+		this->current_position = new EntityPosition(this->id,{
 			.x = overridePosition.x,
 			.y = overridePosition.y,
 		});
+		return this->current_position;
 	}
 
 	const size_t floored_frame = normalizeIdx(std::floor(current_entity_frame), positions.size());
 	const size_t ceiled_frame = normalizeIdx(std::ceil(current_entity_frame), positions.size());
 	if (current_entity_frame - floored_frame > 0.0) {
-		return positions[floored_frame]->interpolateWith(
+		this->current_position = positions[floored_frame]->interpolateWith(
 			*positions[ceiled_frame],
 			current_entity_frame - floored_frame
 		);
+	} else {
+		const size_t idx = normalizeIdx(current_entity_frame, positions.size());
+		this->current_position = positions[idx];
 	}
-
-	const size_t idx = normalizeIdx(current_entity_frame, positions.size());
-	this->current_position = positions[idx];
 	return this->current_position;
 }
 
