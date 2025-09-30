@@ -29,7 +29,7 @@ void Entity::updateCurrentFrame() {
 	this->current_position = nullptr;
 }
 
-EntityPosition* Entity::calculateEntityPosition() {
+EntityPosition* Entity::getCurrentPosition() {
 	if (this->current_position != nullptr) {
 		return this->current_position;
 	}

@@ -33,7 +33,7 @@ void drawEntity(Entity& entity) {
 		return;
 	}
 
-	EntityPosition* posToTranslatef = entity.calculateEntityPosition();
+	EntityPosition* posToTranslatef = entity.getCurrentPosition();
 	glTranslatef(posToTranslatef->position.x, posToTranslatef->position.y, 0);
 
 	glBegin(GL_QUADS);
@@ -46,14 +46,11 @@ void drawEntity(Entity& entity) {
 }
 
 void mainDraw() {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(left, right, bottom, top);
+	// Como não há pan ou zoom, não há necessidade de configurar a matriz de projeção GL_PROJECTION
 	glMatrixMode(GL_MODELVIEW);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
 
 	for (size_t i = 0; i < entities.size(); i++) {
 		drawEntity(*entities[i]);
@@ -80,7 +77,7 @@ void animate() {
 	std::vector<EntityPosition*> positions;
 	for (size_t i = 0; i < entities.size(); i++) {
 		entities[i]->updateCurrentFrame();
-		positions.push_back(entities[i]->calculateEntityPosition());
+		positions.push_back(entities[i]->getCurrentPosition());
 	}
 	auto collision = new CollisionChecker(positions, entities, entities_size);
 	std::vector<EntityPairs *> colliding_entities = collision->getCollidingEntities();

@@ -21,7 +21,7 @@ public:
 	Entity(int id, std::vector<EntityPosition* > positions, int max_frames);
 	Entity(int id, bool isControllable, Position overridePosition);
 	void updateCurrentFrame();
-	EntityPosition* calculateEntityPosition();
+	EntityPosition* getCurrentPosition();
 	~Entity();
 
 private:
