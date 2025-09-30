@@ -17,6 +17,7 @@ public:
 	float current_entity_frame = 0;
 	bool going_backwards = false;
 	EntityPosition* current_position;
+	std::vector<EntityPosition *> trash_can;
 
 	Entity(int id, std::vector<EntityPosition* > positions, int max_frames);
 	Entity(int id, bool isControllable, Position overridePosition);

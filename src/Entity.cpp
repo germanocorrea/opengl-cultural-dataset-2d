@@ -15,7 +15,7 @@ Entity::Entity(const int id, const bool isControllable, const Position overrideP
 	this->overridePosition = overridePosition;
 	this->positions = std::vector<EntityPosition *>();
 	this->current_position = new EntityPosition(id, overridePosition);
-	this->positions.push_back(current_position);
+	this->positions.push_back(this->current_position);
 }
 
 void Entity::updateCurrentFrame() {
@@ -38,6 +38,7 @@ EntityPosition* Entity::getCurrentPosition() {
 			.x = overridePosition.x,
 			.y = overridePosition.y,
 		});
+		this->trash_can.push_back(this->current_position);
 		return this->current_position;
 	}
 
@@ -48,6 +49,7 @@ EntityPosition* Entity::getCurrentPosition() {
 			*positions[ceiled_frame],
 			current_entity_frame - floored_frame
 		);
+		this->trash_can.push_back(this->current_position);
 	} else {
 		const size_t idx = normalizeIdx(current_entity_frame, positions.size());
 		this->current_position = positions[idx];
@@ -57,6 +59,9 @@ EntityPosition* Entity::getCurrentPosition() {
 
 Entity::~Entity() {
 	for (auto pos : positions) {
+		delete pos;
+	}
+	for (auto pos : trash_can) {
 		delete pos;
 	}
 };
