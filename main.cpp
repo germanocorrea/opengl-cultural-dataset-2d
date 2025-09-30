@@ -35,7 +35,6 @@ void drawEntity(Entity& entity) {
 
 	EntityPosition* posToTranslatef = entity.calculateEntityPosition();
 	glTranslatef(posToTranslatef->position.x, posToTranslatef->position.y, 0);
-	glRotatef(entity.rotation, 0, 0, 1);
 
 	glBegin(GL_QUADS);
 	glVertex2f(0, 0);
@@ -221,7 +220,7 @@ int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(800, 800);
-	glutCreateWindow("CG - T1 - Germano Corrêa");
+	glutCreateWindow("CG - T1 - Germano Bruscato Corrêa");
 
 	std::string filename = argv[1];
 	initializeEntities(filename);

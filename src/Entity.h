@@ -10,7 +10,6 @@ class Entity {
 public:
 	int id;
 	bool isControllable = false;
-	float rotation = 0;
 	Position overridePosition{};
 	std::vector<EntityPosition *> positions;
 	Color color = {0.2, 0.8, 0};
